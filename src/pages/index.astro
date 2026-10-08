@@ -1,0 +1,71 @@
+---
+// This block runs ONLY during build time on Cloudflare's server.
+// It fetches your sheet ONCE, turns it into static HTML, and shuts down.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw2cTkJjjN0mIIExIwd6dt0nU8MOmkRXsAC-UUbU1uOZ1dHOiIMCVygL-tErfsudfle4w/exec';
+
+let posts = [];
+try {
+  const res = await fetch(APPS_SCRIPT_URL);
+  posts = await res.json();
+} catch (e) {
+  console.error("Build fetch error:", e);
+}
+
+function slugify(text) {
+  return String(text || '').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Joe's Blog — Daily Thoughts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="bg-white text-black dark:bg-black dark:text-white min-h-screen">
+  <div class="max-w-3xl mx-auto px-6 py-16">
+    
+    <!-- Profile Header -->
+    <header class="mb-16 pb-8 border-b border-neutral-200 dark:border-neutral-800">
+      <h1 class="text-4xl font-extrabold tracking-tight">Joe's Blog</h1>
+      <p class="text-sm text-neutral-500 mt-2">Daily thoughts, business, systems & health.</p>
+    </header>
+
+    <!-- Pre-rendered Static Posts Stream (Zero Load Time) -->
+    <main class="space-y-16">
+      {posts.map((post) => (
+        <article class="space-y-4">
+          <div class="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+            {post.category || 'General'}
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">
+            {post.title}
+          </h2>
+
+          {post.audio && (
+            <div class="my-4 p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+              <span class="text-xs text-neutral-600 dark:text-neutral-400 font-medium">Listen to Joe read this</span>
+              <audio controls preload="none" src={post.audio} class="h-8 max-w-xs"></audio>
+            </div>
+          )}
+
+          <div class="text-base sm:text-lg text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
+            {post.content}
+          </div>
+
+          <div class="pt-4 border-t border-neutral-100 dark:border-neutral-900 text-xs text-neutral-400">
+            <time>{post.date}</time>
+          </div>
+        </article>
+      ))}
+    </main>
+  </div>
+</body>
+</html>
